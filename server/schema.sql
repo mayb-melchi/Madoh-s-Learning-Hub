@@ -80,6 +80,25 @@ CREATE TABLE IF NOT EXISTS rep_codes (
   used_at TEXT
 );
 
+CREATE TABLE IF NOT EXISTS announcements (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  course_id TEXT REFERENCES courses(id) ON DELETE CASCADE,
+  pinned INTEGER DEFAULT 0,
+  author_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  author_name TEXT,
+  created_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS tutorial_registrations (
+  tutorial_id TEXT NOT NULL REFERENCES tutorials(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_name TEXT,
+  registered_at TEXT,
+  PRIMARY KEY (tutorial_id, user_id)
+);
+
 -- Performance indexes for 500-1000 concurrent users
 CREATE INDEX IF NOT EXISTS idx_materials_course ON materials(course_id);
 CREATE INDEX IF NOT EXISTS idx_materials_category ON materials(category);
@@ -90,3 +109,6 @@ CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id);
 CREATE INDEX IF NOT EXISTS idx_tutorials_course ON tutorials(course_id);
 CREATE INDEX IF NOT EXISTS idx_users_name ON users(full_name);
 CREATE INDEX IF NOT EXISTS idx_rep_codes_code ON rep_codes(code);
+CREATE INDEX IF NOT EXISTS idx_announcements_created ON announcements(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tutorial_reg_tutorial ON tutorial_registrations(tutorial_id);
+CREATE INDEX IF NOT EXISTS idx_tutorial_reg_user ON tutorial_registrations(user_id);

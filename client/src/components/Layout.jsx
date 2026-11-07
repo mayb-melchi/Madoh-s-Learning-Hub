@@ -18,7 +18,7 @@ const navItems = [
   { path: '/tutorials', label: 'Tutorials', icon: Calendar },
   { path: '/quizzes', label: 'Quizzes & Practice', icon: HelpCircle, disabled: true },
   { path: '/revision', label: 'Revision Centre', icon: RotateCcw, disabled: true },
-  { path: '/announcements', label: 'Announcements', icon: Megaphone, disabled: true },
+  { path: '/announcements', label: 'Announcements', icon: Megaphone },
   { path: '/profile', label: 'Profile & Settings', icon: User },
   { path: '/study-assistant', label: 'Study Assistant', icon: Bot, disabled: true },
 ];
@@ -81,13 +81,26 @@ function SearchDropdown({ query, onClose, navigate }) {
   );
 }
 
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const now = new Date();
+  const then = new Date(dateStr);
+  const diff = Math.floor((now - then) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return then.toLocaleDateString();
+}
+
 function NotificationPanel({ onClose }) {
-  const [notifications] = useState([
-    { id: 1, text: 'Pre-Bar Exam Timetable Released', time: '3 days ago', read: false },
-    { id: 2, text: 'New material uploaded: ADR Lecture Notes', time: '1 week ago', read: true },
-    { id: 3, text: 'Tutorial registration open: Family Law', time: '2 weeks ago', read: true },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const ref = useRef();
+
+  useEffect(() => {
+    api('/notifications').then(data => { setNotifications(data || []); setLoading(false); });
+  }, []);
 
   useEffect(() => {
     function handleClick(e) { if (ref.current && !ref.current.contains(e.target)) onClose(); }
@@ -101,10 +114,12 @@ function NotificationPanel({ onClose }) {
         <strong>Notifications</strong>
         <button className="icon-btn" onClick={onClose}><X size={16} /></button>
       </div>
+      {loading && <div className="notification-item"><div className="notification-text">Loading...</div></div>}
+      {!loading && notifications.length === 0 && <div className="notification-item"><div className="notification-text" style={{ color: 'var(--text-muted)' }}>No notifications yet.</div></div>}
       {notifications.map(n => (
-        <div key={n.id} className={`notification-item ${n.read ? '' : 'unread'}`}>
+        <div key={n.id} className="notification-item unread">
           <div className="notification-text">{n.text}</div>
-          <div className="notification-time">{n.time}</div>
+          <div className="notification-time">{timeAgo(n.time)}</div>
         </div>
       ))}
     </div>

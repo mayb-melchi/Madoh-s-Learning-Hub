@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api, apiFileUrl, canManage } from '../api';
 import { useUser } from '../components/Layout';
-import { ArrowLeft, FileText, ScrollText, Calendar, Download, ExternalLink, Users, Shield, ShieldOff, Copy, Plus, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, FileText, ScrollText, Calendar, Download, ExternalLink, Users, Shield, ShieldOff, Copy, Plus, Trash2, Upload, UserCheck, UserX } from 'lucide-react';
 import UploadForm from '../components/UploadForm';
 
 function ManageReps({ courseId }) {
@@ -105,6 +105,57 @@ function ManageReps({ courseId }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function WaitlistManager() {
+  const [waitlist, setWaitlist] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api('/waitlist').then(data => { setWaitlist(data || []); setLoading(false); });
+  }, []);
+
+  async function approve(id) {
+    await api(`/waitlist/${id}/approve`, { method: 'POST' });
+    setWaitlist(prev => prev.filter(w => w.id !== id));
+  }
+
+  async function reject(id) {
+    if (!confirm('Reject this request?')) return;
+    await api(`/waitlist/${id}`, { method: 'DELETE' });
+    setWaitlist(prev => prev.filter(w => w.id !== id));
+  }
+
+  if (loading) return <div className="empty-state"><p>Loading...</p></div>;
+
+  return (
+    <div style={{ marginTop: '24px' }}>
+      <h3 style={{ fontSize: '16px', fontWeight: 600, fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', marginBottom: '12px' }}>Pending Waitlist ({waitlist.length})</h3>
+      {waitlist.length === 0 && (
+        <div style={{ padding: '20px', background: 'var(--bg-input)', borderRadius: '10px', color: 'var(--text-muted)', fontSize: '14px', textAlign: 'center' }}>
+          No pending requests.
+        </div>
+      )}
+      {waitlist.map(w => (
+        <div key={w.id} className="material-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+          <div>
+            <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{w.full_name}</span>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              {w.campus || 'No campus'} {w.email ? `· ${w.email}` : ''} · {new Date(w.created_at).toLocaleDateString()}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button className="btn-primary-sm" style={{ padding: '4px 10px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => approve(w.id)}>
+              <UserCheck size={12} /> Approve
+            </button>
+            <button className="btn-outline-sm" style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--red)', borderColor: 'var(--red)', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => reject(w.id)}>
+              <UserX size={12} /> Reject
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -279,7 +330,10 @@ export default function CourseDetail() {
       )}
 
       {tab === 'manage' && user?.role === 'lecturer' && (
-        <ManageReps courseId={id} />
+        <>
+          <ManageReps courseId={id} />
+          <WaitlistManager />
+        </>
       )}
     </div>
   );

@@ -449,6 +449,114 @@ app.get('/api/search', auth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ─── Announcements ──────────────────────────────────
+app.get('/api/announcements', auth, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM announcements ORDER BY pinned DESC, created_at DESC');
+    res.json(rows);
+  } catch (err) { next(err); }
+});
+
+app.post('/api/announcements', auth, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'lecturer') {
+      const { rows } = await pool.query('SELECT course_id FROM course_roles WHERE user_id = $1', [req.user.id]);
+      if (rows.length === 0) return res.status(403).json({ error: 'Only lecturers and course reps can post announcements' });
+    }
+    const { title, body, course_id, pinned } = req.body;
+    if (!title || !body) return res.status(400).json({ error: 'Title and body are required' });
+    const id = uuid();
+    const createdAt = new Date().toISOString();
+    await pool.query(
+      'INSERT INTO announcements (id, title, body, course_id, pinned, author_id, author_name, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+      [id, title, body, course_id || null, pinned ? 1 : 0, req.user.id, req.user.full_name, createdAt]
+    );
+    res.json({ id, title, body, course_id: course_id || null, pinned: pinned ? 1 : 0, author_id: req.user.id, author_name: req.user.full_name, created_at: createdAt });
+  } catch (err) { next(err); }
+});
+
+app.delete('/api/announcements/:id', auth, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM announcements WHERE id = $1', [req.params.id]);
+    const ann = rows[0];
+    if (!ann) return res.status(404).json({ error: 'Not found' });
+    if (ann.author_id !== req.user.id && req.user.role !== 'lecturer') return res.status(403).json({ error: 'Not authorized' });
+    await pool.query('DELETE FROM announcements WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
+// ─── Tutorial Registration ──────────────────────────
+app.get('/api/tutorials/:id/registrations', auth, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM tutorial_registrations WHERE tutorial_id = $1', [req.params.id]);
+    res.json(rows);
+  } catch (err) { next(err); }
+});
+
+app.post('/api/tutorials/:id/register', auth, async (req, res, next) => {
+  try {
+    const tutorialId = req.params.id;
+    const { rows: existing } = await pool.query('SELECT * FROM tutorial_registrations WHERE tutorial_id = $1 AND user_id = $2', [tutorialId, req.user.id]);
+    if (existing[0]) return res.json({ success: true, already: true });
+    await pool.query(
+      'INSERT INTO tutorial_registrations (tutorial_id, user_id, user_name, registered_at) VALUES ($1, $2, $3, $4)',
+      [tutorialId, req.user.id, req.user.full_name, new Date().toISOString()]
+    );
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
+app.delete('/api/tutorials/:id/register', auth, async (req, res, next) => {
+  try {
+    await pool.query('DELETE FROM tutorial_registrations WHERE tutorial_id = $1 AND user_id = $2', [req.params.id, req.user.id]);
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
+// ─── Waitlist Management ────────────────────────────
+app.get('/api/waitlist', auth, requireRole('lecturer'), async (req, res, next) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM waitlist ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (err) { next(err); }
+});
+
+app.post('/api/waitlist/:id/approve', auth, requireRole('lecturer'), async (req, res, next) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM waitlist WHERE id = $1', [req.params.id]);
+    const entry = rows[0];
+    if (!entry) return res.status(404).json({ error: 'Not found' });
+    const initials = entry.full_name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const userId = `GSL-${uuid().slice(0, 8)}`;
+    await pool.query('INSERT INTO users (id, full_name, role, approved, avatar_initials, campus) VALUES ($1, $2, $3, 1, $4, $5)', [userId, entry.full_name, 'student', initials, entry.campus || 'Accra']);
+    await pool.query('DELETE FROM waitlist WHERE id = $1', [req.params.id]);
+    res.json({ success: true, user_id: userId });
+  } catch (err) { next(err); }
+});
+
+app.delete('/api/waitlist/:id', auth, requireRole('lecturer'), async (req, res, next) => {
+  try {
+    await pool.query('DELETE FROM waitlist WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
+// ─── Notifications ──────────────────────────────────
+app.get('/api/notifications', auth, async (req, res, next) => {
+  try {
+    const [annRes, matRes] = await Promise.all([
+      pool.query('SELECT id, title, author_name, created_at FROM announcements ORDER BY created_at DESC LIMIT 5'),
+      pool.query('SELECT id, title, uploader_name, uploaded_at FROM materials ORDER BY uploaded_at DESC LIMIT 5'),
+    ]);
+    const notifications = [
+      ...annRes.rows.map(a => ({ id: `ann-${a.id}`, text: a.title, by: a.author_name, time: a.created_at, type: 'announcement' })),
+      ...matRes.rows.map(m => ({ id: `mat-${m.id}`, text: `New upload: ${m.title}`, by: m.uploader_name, time: m.uploaded_at, type: 'material' })),
+    ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 10);
+    res.json(notifications);
+  } catch (err) { next(err); }
+});
+
 // ─── Serve React build in production ─────────────────
 if (process.env.NODE_ENV === 'production') {
   const clientDist = path.join(__dirname, '..', 'client', 'dist');

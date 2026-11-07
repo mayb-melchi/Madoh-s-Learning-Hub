@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api, canManage } from '../api';
 import { useUser } from '../components/Layout';
-import { Calendar, ExternalLink, Trash2, Edit3, X } from 'lucide-react';
+import { Calendar, ExternalLink, Trash2, Edit3, X, Users, UserPlus, UserMinus } from 'lucide-react';
 
 function TutorialForm({ courses, initial, onSave, onCancel }) {
   const [courseId, setCourseId] = useState(initial?.course_id || '');
@@ -63,11 +63,21 @@ export default function Tutorials() {
   const [showForm, setShowForm] = useState(false);
   const [editTutorial, setEditTutorial] = useState(null);
   const [filter, setFilter] = useState('');
+  const [registrations, setRegistrations] = useState({});
   const user = useUser();
 
   useEffect(() => {
     const params = filter ? `?course_id=${filter}` : '';
-    api(`/tutorials${params}`).then(data => setTutorials(data || []));
+    api(`/tutorials${params}`).then(async data => {
+      const tuts = data || [];
+      setTutorials(tuts);
+      const regs = {};
+      await Promise.all(tuts.map(async t => {
+        const r = await api(`/tutorials/${t.id}/registrations`);
+        regs[t.id] = r || [];
+      }));
+      setRegistrations(regs);
+    });
   }, [filter]);
 
   useEffect(() => {
@@ -78,6 +88,22 @@ export default function Tutorials() {
     if (!confirm('Delete this tutorial?')) return;
     await api(`/tutorials/${id}`, { method: 'DELETE' });
     setTutorials(prev => prev.filter(t => t.id !== id));
+  }
+
+  async function handleRegister(tutorialId) {
+    await api(`/tutorials/${tutorialId}/register`, { method: 'POST' });
+    setRegistrations(prev => ({
+      ...prev,
+      [tutorialId]: [...(prev[tutorialId] || []), { user_id: user.id, user_name: user.full_name, registered_at: new Date().toISOString() }],
+    }));
+  }
+
+  async function handleUnregister(tutorialId) {
+    await api(`/tutorials/${tutorialId}/register`, { method: 'DELETE' });
+    setRegistrations(prev => ({
+      ...prev,
+      [tutorialId]: (prev[tutorialId] || []).filter(r => r.user_id !== user.id),
+    }));
   }
 
   function handleSave(t) {
@@ -124,33 +150,51 @@ export default function Tutorials() {
         </div>
       )}
 
-      {tutorials.map(t => (
-        <div key={t.id} className="tutorial-card">
-          <div style={{ flex: 1 }}>
-            <h3>{t.title}</h3>
-            <div className="tutorial-details">
-              <span>{t.course_title}</span>
-              {t.date && <span> · {new Date(t.date).toLocaleDateString()}</span>}
-              {t.description && <div style={{ marginTop: '4px', color: 'var(--gray-500)', fontSize: '13px' }}>{t.description}</div>}
-            </div>
-            {canManage(user) && (
-              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                <button className="btn-outline-sm" style={{ padding: '6px 12px', minHeight: '36px' }} onClick={() => { setEditTutorial(t); setShowForm(true); }}>
-                  <Edit3 size={14} /> Edit
-                </button>
-                <button className="btn-danger-sm" style={{ padding: '6px 12px', minHeight: '36px' }} onClick={() => handleDelete(t.id)}>
-                  <Trash2 size={14} /> Delete
-                </button>
+      {tutorials.map(t => {
+        const regs = registrations[t.id] || [];
+        const isRegistered = regs.some(r => r.user_id === user?.id);
+        return (
+          <div key={t.id} className="tutorial-card">
+            <div style={{ flex: 1 }}>
+              <h3>{t.title}</h3>
+              <div className="tutorial-details">
+                <span>{t.course_title}</span>
+                {t.date && <span> · {new Date(t.date).toLocaleDateString()}</span>}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: '8px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                  <Users size={13} /> {regs.length} registered
+                </span>
+                {t.description && <div style={{ marginTop: '4px', color: 'var(--gray-500)', fontSize: '13px' }}>{t.description}</div>}
               </div>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                {isRegistered ? (
+                  <button className="btn-outline-sm" style={{ padding: '6px 12px', minHeight: '36px', color: 'var(--red)', borderColor: 'var(--red)' }} onClick={() => handleUnregister(t.id)}>
+                    <UserMinus size={14} /> Cancel Registration
+                  </button>
+                ) : (
+                  <button className="btn-primary-sm" style={{ padding: '6px 12px', minHeight: '36px' }} onClick={() => handleRegister(t.id)}>
+                    <UserPlus size={14} /> Register
+                  </button>
+                )}
+                {canManage(user) && (
+                  <>
+                    <button className="btn-outline-sm" style={{ padding: '6px 12px', minHeight: '36px' }} onClick={() => { setEditTutorial(t); setShowForm(true); }}>
+                      <Edit3 size={14} /> Edit
+                    </button>
+                    <button className="btn-danger-sm" style={{ padding: '6px 12px', minHeight: '36px' }} onClick={() => handleDelete(t.id)}>
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+            {t.link && (
+              <a href={t.link} target="_blank" rel="noopener noreferrer" className="btn-join">
+                <ExternalLink size={14} /> Join
+              </a>
             )}
           </div>
-          {t.link && (
-            <a href={t.link} target="_blank" rel="noopener noreferrer" className="btn-join">
-              <ExternalLink size={14} /> Join
-            </a>
-          )}
-        </div>
-      ))}
+        );
+      })}
 
       {tutorials.length === 0 && (
         <div className="empty-state">
