@@ -17,9 +17,9 @@ function PreviewModal({ material, onClose }) {
           <p><strong>Uploaded by:</strong> {material.uploader_name}</p>
           <p><strong>Downloads:</strong> {material.downloads || 0}</p>
           {material.description && <p style={{ marginTop: 12 }}>{material.description}</p>}
-          {material.path ? (
+          {material.file_url ? (
             <iframe
-              src={apiFileUrl(material.path)}
+              src={material.file_url}
               style={{ width: '100%', height: '400px', border: 'none', marginTop: '16px', borderRadius: '8px' }}
               title="Preview"
             />
@@ -61,7 +61,7 @@ export default function PastQuestions() {
   async function handleDownload(m) {
     await api(`/materials/${m.id}/download`, { method: 'POST' });
     setMaterials(prev => prev.map(x => x.id === m.id ? { ...x, downloads: (x.downloads || 0) + 1 } : x));
-    if (m.path) window.open(apiFileUrl(m.path), '_blank');
+    if (m.file_url) window.open(m.file_url, '_blank');
   }
 
   async function toggleBookmark(id) {

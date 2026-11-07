@@ -133,7 +133,7 @@ export default function CourseDetail() {
 
   function handleDownload(m) {
     api(`/materials/${m.id}/download`, { method: 'POST' });
-    if (m.path) window.open(apiFileUrl(m.path), '_blank');
+    if (m.file_url) window.open(m.file_url, '_blank');
   }
 
   async function handleDelete(materialId) {

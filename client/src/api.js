@@ -26,8 +26,8 @@ export async function api(path, options = {}) {
   return res.json();
 }
 
-export function apiFileUrl(path) {
-  return `${API}/uploads/${path}`;
+export function apiFileUrl(fileUrl) {
+  return fileUrl || null;
 }
 
 export function getUser() {

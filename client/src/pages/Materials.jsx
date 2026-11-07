@@ -29,7 +29,7 @@ export default function Materials() {
   async function handleDownload(m) {
     await api(`/materials/${m.id}/download`, { method: 'POST' });
     setMaterials(prev => prev.map(x => x.id === m.id ? { ...x, downloads: (x.downloads || 0) + 1 } : x));
-    if (m.path) window.open(apiFileUrl(m.path), '_blank');
+    if (m.file_url) window.open(m.file_url, '_blank');
   }
 
   async function toggleBookmark(id) {

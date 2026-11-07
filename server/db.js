@@ -1,14 +1,15 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
+const { Pool } = require('pg');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'gsl.db');
-const db = new Database(DB_PATH);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle DB client', err);
+});
 
-const schemaSQL = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf-8');
-db.exec(schemaSQL);
-
-module.exports = db;
+module.exports = pool;

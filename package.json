@@ -7,19 +7,22 @@
     "server": "node server/index.js",
     "client": "cd client && npm run dev",
     "install:all": "npm install && cd client && npm install",
+    "setup-db": "node server/setup-db.js",
     "seed": "node server/seed.js",
     "build": "cd client && npm run build",
     "start": "node server/index.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^13.0.3",
+    "compression": "^1.7.4",
     "concurrently": "^9.1.0",
     "cors": "^2.8.5",
     "dotenv": "^18.0.9",
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "pg": "^8.13.1",
     "uuid": "^11.0.3"
   }
 }
