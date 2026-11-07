@@ -1,0 +1,10 @@
+node_modules/
+uploads/
+server/gsl.db
+server/gsl.db-wal
+server/gsl.db-shm
+server/data.json
+client/dist/
+.env
+.DS_Store
+*.log
