@@ -1,7 +1,7 @@
 {
-  "name": "Madoh's Learning Hub",
-  "short_name": "Madoh's",
-  "description": "GSL Weekend Tutorial learning platform",
+  "name": "Erma Global Academic Hub",
+  "short_name": "EGAH",
+  "description": "Empowering Minds, Creating Opportunities",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

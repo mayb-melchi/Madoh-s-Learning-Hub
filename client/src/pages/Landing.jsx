@@ -47,7 +47,7 @@ export default function Landing() {
         </div>
         <div className="landing-hero-content">
           <div className="landing-hero-backdrop" />
-          <p className="landing-hero-label">For the class only</p>
+          <p className="landing-hero-label">Empowering Minds, Creating Opportunities</p>
           <h1 className="landing-hero-heading">
             One Place For Every<br />
             <em>Course, Case</em> &amp; <em>Tutorial.</em>
@@ -135,6 +135,7 @@ export default function Landing() {
             <div className="sidebar-crest" style={{ width: 32, height: 32, fontSize: 12 }}>EG</div>
             <span>Erma Global Academic Hub</span>
           </div>
+          <p className="landing-footer-slogan">Empowering Minds, Creating Opportunities</p>
           <p>Copyright &copy; All Rights Reserved — 2026</p>
         </div>
       </footer>

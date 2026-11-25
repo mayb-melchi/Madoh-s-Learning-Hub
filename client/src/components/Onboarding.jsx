@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 const steps = [
   {
     title: "Welcome to Erma Global Academic Hub!",
-    description: 'This is your learning hub for Pre-Bar exam preparation. Let us show you around so you can get the most out of it.',
+    description: 'Empowering Minds, Creating Opportunities. Let us show you around so you can get the most out of it.',
     position: 'center',
   },
   {
