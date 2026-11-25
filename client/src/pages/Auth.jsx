@@ -24,6 +24,7 @@ export default function Auth() {
     e.preventDefault();
     setError('');
     const data = await api('/auth/lookup', { method: 'POST', body: JSON.stringify({ full_name: name }) });
+    if (!data || data.error) { setError(data?.error || 'Could not reach the server. Please try again.'); return; }
     if (!data.found) { setError('Name not found on the class list.'); return; }
     if (!data.approved) { setError('Your account is pending approval.'); return; }
     setUserId(data.user_id);
@@ -73,8 +74,8 @@ export default function Auth() {
     <div className="auth-page" style={{ position: 'relative' }}>
       <Link to="/" className="back-link"><ArrowLeft size={16} /> Back to home</Link>
       <div className="auth-logo">
-        <div className="crest">ML</div>
-        <h2>Madoh's Learning Hub</h2>
+        <div className="crest">EG</div>
+        <h2>Erma Global Academic Hub</h2>
       </div>
 
       {step === 'name' && (

@@ -1,4 +1,4 @@
--- PostgreSQL schema for Madoh's Learning Hub
+-- PostgreSQL schema for Erma Global Academic Hub
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,

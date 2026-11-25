@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 const steps = [
   {
-    title: 'Welcome to Madoh's Learning Hub!',
+    title: "Welcome to Erma Global Academic Hub!",
     description: 'This is your learning hub for Pre-Bar exam preparation. Let us show you around so you can get the most out of it.',
     position: 'center',
   },
@@ -58,7 +58,7 @@ export default function Onboarding() {
   const [tooltipStyle, setTooltipStyle] = useState({});
 
   useEffect(() => {
-    const seen = localStorage.getItem('gsl_onboarding_done');
+    const seen = localStorage.getItem('egah_onboarding_done');
     if (!seen) {
       const timer = setTimeout(() => setStep(0), 800);
       return () => clearTimeout(timer);
@@ -121,7 +121,7 @@ export default function Onboarding() {
 
   function finish() {
     setStep(-1);
-    localStorage.setItem('gsl_onboarding_done', '1');
+    localStorage.setItem('egah_onboarding_done', '1');
   }
 
   function next() {

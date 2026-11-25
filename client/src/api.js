@@ -1,7 +1,7 @@
 const API = import.meta.env.VITE_API_URL || '/api';
 
 function getToken() {
-  return localStorage.getItem('gsl_token');
+  return localStorage.getItem('egah_token');
 }
 
 function authHeaders() {
@@ -13,17 +13,24 @@ function authHeaders() {
 
 export async function api(path, options = {}) {
   const defaultHeaders = options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' };
-  const res = await fetch(`${API}${path}`, {
-    ...options,
-    headers: { ...defaultHeaders, ...authHeaders(), ...options.headers },
-  });
-  if (res.status === 401 && !path.startsWith('/auth/')) {
-    localStorage.removeItem('gsl_token');
-    localStorage.removeItem('gsl_user');
-    window.location.href = '/auth';
-    return;
+  try {
+    const res = await fetch(`${API}${path}`, {
+      ...options,
+      headers: { ...defaultHeaders, ...authHeaders(), ...options.headers },
+    });
+    if (res.status === 401 && !path.startsWith('/auth/')) {
+      localStorage.removeItem('egah_token');
+      localStorage.removeItem('egah_user');
+      window.location.href = '/auth';
+      return;
+    }
+    const text = await res.text();
+    if (!text) return { error: 'Empty response from server' };
+    try { return JSON.parse(text); }
+    catch { return { error: 'Invalid server response' }; }
+  } catch (err) {
+    return { error: 'Cannot connect to server' };
   }
-  return res.json();
 }
 
 export function apiFileUrl(fileUrl) {
@@ -31,18 +38,18 @@ export function apiFileUrl(fileUrl) {
 }
 
 export function getUser() {
-  try { return JSON.parse(localStorage.getItem('gsl_user')); }
+  try { return JSON.parse(localStorage.getItem('egah_user')); }
   catch { return null; }
 }
 
 export function setAuth(token, user) {
-  localStorage.setItem('gsl_token', token);
-  localStorage.setItem('gsl_user', JSON.stringify(user));
+  localStorage.setItem('egah_token', token);
+  localStorage.setItem('egah_user', JSON.stringify(user));
 }
 
 export function logout() {
-  localStorage.removeItem('gsl_token');
-  localStorage.removeItem('gsl_user');
+  localStorage.removeItem('egah_token');
+  localStorage.removeItem('egah_user');
   window.location.href = '/';
 }
 

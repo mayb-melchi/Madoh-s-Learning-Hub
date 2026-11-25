@@ -13,7 +13,7 @@ const pool = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const JWT_SECRET = process.env.JWT_SECRET || 'gsl-weekend-class-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'erma-global-academic-hub-secret-key';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -147,7 +147,7 @@ app.post('/api/auth/waitlist', async (req, res, next) => {
       const code = rows[0];
       if (!code) return res.status(400).json({ error: 'Invalid or already-used rep code.' });
       const initials = full_name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
-      const userId = `GSL-${uuid().slice(0, 8)}`;
+      const userId = `EGA-${uuid().slice(0, 8)}`;
       await pool.query('INSERT INTO users (id, full_name, role, approved, avatar_initials, campus) VALUES ($1, $2, $3, 1, $4, $5)', [userId, full_name.trim(), 'student', initials, campus || 'Accra']);
       await pool.query('INSERT INTO course_roles (user_id, course_id, role) VALUES ($1, $2, $3)', [userId, code.course_id, 'course_rep']);
       await pool.query('UPDATE rep_codes SET used = 1, used_by = $1, used_at = $2 WHERE id = $3', [userId, new Date().toISOString(), code.id]);
@@ -528,7 +528,7 @@ app.post('/api/waitlist/:id/approve', auth, requireRole('lecturer'), async (req,
     const entry = rows[0];
     if (!entry) return res.status(404).json({ error: 'Not found' });
     const initials = entry.full_name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    const userId = `GSL-${uuid().slice(0, 8)}`;
+    const userId = `EGA-${uuid().slice(0, 8)}`;
     await pool.query('INSERT INTO users (id, full_name, role, approved, avatar_initials, campus) VALUES ($1, $2, $3, 1, $4, $5)', [userId, entry.full_name, 'student', initials, entry.campus || 'Accra']);
     await pool.query('DELETE FROM waitlist WHERE id = $1', [req.params.id]);
     res.json({ success: true, user_id: userId });

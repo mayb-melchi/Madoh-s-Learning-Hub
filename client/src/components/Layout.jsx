@@ -134,10 +134,10 @@ export default function Layout({ children }) {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [themePreference, setThemePreference] = useState(() => localStorage.getItem('gsl_theme') || 'system');
+  const [themePreference, setThemePreference] = useState(() => localStorage.getItem('egah_theme') || 'system');
 
   useEffect(() => {
-    localStorage.setItem('gsl_theme', themePreference);
+    localStorage.setItem('egah_theme', themePreference);
     function applyTheme() {
       if (themePreference === 'system') {
         const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -165,10 +165,10 @@ export default function Layout({ children }) {
             return prev;
           });
         }
-      });
+      }).catch(() => {});
     }
     refresh();
-    const interval = setInterval(refresh, 5000);
+    const interval = setInterval(refresh, 30000);
     function onFocus() { refresh(); }
     window.addEventListener('focus', onFocus);
     return () => { cancelled = true; clearInterval(interval); window.removeEventListener('focus', onFocus); };
@@ -181,8 +181,8 @@ export default function Layout({ children }) {
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <div className="sidebar-crest">ML</div>
-          <h1>Madoh's Learning Hub</h1>
+          <div className="sidebar-crest">EG</div>
+          <h1>Erma Global Academic Hub</h1>
         </div>
         <nav className="sidebar-nav">
           {navItems.map(({ path, label, icon: Icon, disabled }) => (

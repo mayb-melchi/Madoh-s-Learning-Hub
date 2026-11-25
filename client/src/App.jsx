@@ -9,6 +9,7 @@ import CourseDetail from './pages/CourseDetail';
 import Materials from './pages/Materials';
 import PastQuestions from './pages/PastQuestions';
 import Tutorials from './pages/Tutorials';
+import Announcements from './pages/Announcements';
 import ComingSoon from './pages/ComingSoon';
 import Profile from './pages/Profile';
 
@@ -35,7 +36,7 @@ export default function App() {
       <Route path="/tutorials" element={<P><Tutorials /></P>} />
       <Route path="/quizzes" element={<P><ComingSoon title="Quizzes & Practice" /></P>} />
       <Route path="/revision" element={<P><ComingSoon title="Revision Centre" /></P>} />
-      <Route path="/announcements" element={<P><ComingSoon title="Announcements" /></P>} />
+      <Route path="/announcements" element={<P><Announcements /></P>} />
       <Route path="/profile" element={<P><Profile /></P>} />
       <Route path="/study-assistant" element={<P><ComingSoon title="Study Assistant" /></P>} />
       <Route path="*" element={<Navigate to="/" replace />} />
